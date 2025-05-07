@@ -79,6 +79,7 @@ Untuk mencapai tujuan di atas, proyek ini mengusulkan pendekatan content-based f
 Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 
 **Credit Dataset**
+
 ![image](https://github.com/user-attachments/assets/5ebe2420-4534-4944-9ea4-862423877434)
 
 | **Nama Fitur** | **Tipe Data** | **Deskripsi Singkat**                                                                 |
@@ -93,6 +94,7 @@ Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 ![image](https://github.com/user-attachments/assets/36a730e0-c365-44dc-af73-08ca67aa7c9b)
 
 **Keyword Dataset**
+
 ![image](https://github.com/user-attachments/assets/f693469c-2c95-48af-90de-9dd291b5a937)
 
 | **Nama Fitur** | **Tipe Data** | **Deskripsi Singkat**                                                                 |
@@ -105,6 +107,7 @@ Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 
 
 **Movie Metada Dataset**
+
 ![image](https://github.com/user-attachments/assets/4feeaf41-ff85-42fb-a959-00de971b073c)
 ![image](https://github.com/user-attachments/assets/4768f60f-99d6-42c3-bd9e-e463c8e227cb)
 
