@@ -1,4 +1,4 @@
-# **Laporan Proyek Machine Learning - Ivan Sholana**
+![image](https://github.com/user-attachments/assets/b052a858-3659-4087-b847-f9b41a570ae6)# **Laporan Proyek Machine Learning - Ivan Sholana**
 
 ## **Project Overview**
 
@@ -75,10 +75,10 @@ Untuk mencapai tujuan di atas, proyek ini mengusulkan pendekatan content-based f
   2. Mengembangkan fungsi rekomendasi yang menerima judul film sebagai input dan mengembalikan top-N film (misalnya, 5 film) dengan skor tertinggi berdasarkan kombinasi kesamaan konten, weighted rating, dan popularity.
   3. Menggabungkan skor kesamaan (TF-IDF dan BERT-based) dengan weighted rating dan normalized popularity menggunakan bobot tertentu (misalnya, 0.2 untuk masing-masing metrik) untuk menghasilkan skor akhir yang seimbang.
 
-
 # **DATA UNDERSTANDING**
 Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 
+**Credit Dataset**
 ![image](https://github.com/user-attachments/assets/5ebe2420-4534-4944-9ea4-862423877434)
 
 | **Nama Fitur** | **Tipe Data** | **Deskripsi Singkat**                                                                 |
@@ -87,9 +87,520 @@ Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 | `crew`         | object        | Daftar kru film, termasuk sutradara, penulis naskah, produser, dll. Format JSON-like. |
 | `id`           | int / object  | ID unik film untuk menghubungkan data ini dengan dataset utama (`Movies Metadata`).   |
 
+
 **DATA PREVIEW**
 
 ![image](https://github.com/user-attachments/assets/36a730e0-c365-44dc-af73-08ca67aa7c9b)
+
+**Keyword Dataset**
+![image](https://github.com/user-attachments/assets/f693469c-2c95-48af-90de-9dd291b5a937)
+
+| **Nama Fitur** | **Tipe Data** | **Deskripsi Singkat**                                                                 |
+| -------------- | ------------- | ------------------------------------------------------------------------------------- |
+| `id`           | int64         | ID unik film yang digunakan untuk menghubungkan data ini dengan dataset utama.        |
+| `keywords`     | object        | Kumpulan kata kunci deskriptif (tags) yang menggambarkan tema atau elemen utama film. |
+
+**DATA PREVIEW**
+![image](https://github.com/user-attachments/assets/ade0a675-0338-4483-adf6-71efcf677284)
+
+
+**Movie Metada Dataset**
+![image](https://github.com/user-attachments/assets/4feeaf41-ff85-42fb-a959-00de971b073c)
+![image](https://github.com/user-attachments/assets/4768f60f-99d6-42c3-bd9e-e463c8e227cb)
+
+| **Nama Fitur**          | **Tipe Data** | **Deskripsi Singkat**                                                              |
+| ----------------------- | ------------- | ---------------------------------------------------------------------------------- |
+| `adult`                 | object        | Menunjukkan apakah film ditujukan untuk penonton dewasa (`True` atau `False`).     |
+| `belongs_to_collection` | object        | Informasi apakah film merupakan bagian dari koleksi/waralaba film tertentu.        |
+| `budget`                | object        | Anggaran produksi film dalam USD (banyak nilai nol atau tidak diketahui).          |
+| `genres`                | object        | Daftar genre film dalam format JSON-like (misal: Action, Comedy, Drama).           |
+| `homepage`              | object        | URL resmi situs web film, jika tersedia.                                           |
+| `id`                    | object        | ID unik film dalam database ini (kadang tidak konsisten formatnya).                |
+| `imdb_id`               | object        | ID film pada basis data IMDb (contoh: tt1234567).                                  |
+| `original_language`     | object        | Kode bahasa asli film (contoh: `en` untuk Inggris, `fr` untuk Prancis).            |
+| `original_title`        | object        | Judul asli film seperti yang dirilis pertama kali (sebelum translasi/judul lokal). |
+| `overview`              | object        | Ringkasan atau sinopsis film.                                                      |
+| `popularity`            | object        | Skor popularitas film (bisa berasal dari interaksi pengguna, views, dll).          |
+| `poster_path`           | object        | Path URL untuk poster film (digunakan dalam tampilan visual atau UI).              |
+| `production_companies`  | object        | Daftar perusahaan produksi film dalam format JSON-like.                            |
+| `production_countries`  | object        | Negara tempat produksi film dilakukan.                                             |
+| `release_date`          | object        | Tanggal rilis film (formatnya bisa bervariasi, perlu normalisasi).                 |
+| `revenue`               | float64       | Pendapatan total film dalam USD.                                                   |
+| `runtime`               | float64       | Durasi film dalam menit.                                                           |
+| `spoken_languages`      | object        | Daftar bahasa yang digunakan dalam film.                                           |
+| `status`                | object        | Status film (misal: `Released`, `Post Production`, dll).                           |
+| `tagline`               | object        | Kalimat promosi singkat yang biasanya digunakan sebagai slogan film.               |
+| `title`                 | object        | Judul film versi akhir yang ditampilkan.                                           |
+| `video`                 | object        | Menunjukkan apakah entri merupakan video film (boolean dalam string).              |
+| `vote_average`          | float64       | Rata-rata nilai rating film dari pengguna.                                         |
+| `vote_count`            | float64       | Jumlah total suara atau voting yang diberikan pengguna.                            |
+
+**Data Explanatory**
+**1. Genre Distribution**
+Gambar di bawah adalah hasil explanatory genre pertama dalam kumpulan genre untuk tujuan memprediksi 1 genre untuk 1 film
+![image](https://github.com/user-attachments/assets/a6a60cd5-f6a5-4fbd-afd4-8febd106d0f2)
+- Hasil grafik di atas menunjukkan bahwa dataset mengalami unbalance yang tinggi sehingga akan sangat berpotensi mendapatkan hasil metriks evaluasi yang jelek untuk proses pelatihan model klasifikasi genre untuk imputasi nan value.
+
+Gambar di bawah merupakan total distribusi genre yang ada dalam dataset
+![image](https://github.com/user-attachments/assets/f6321272-ff67-4eae-b5c8-ec598f3dba92)
+Hasil di atas menunjukkan bahwa jika ditotal dari setiap genre yang ada di dalam movie maka label tetap tidak seimbang sehingga akan mempengaruhi kualitas prediksi.
+
+# Data Preparation
+
+```python
+import ast
+
+def get_cast_names(cast_str):
+    cast_list = ast.literal_eval(cast_str)
+    names = [cast_member['name'] for cast_member in cast_list]
+    return '; '.join(names)
+
+def get_director(crew_str):
+    crew_list = ast.literal_eval(crew_str)
+    directors = [crew_member['name'] for crew_member in crew_list if crew_member['job'] == 'Director']
+    return '; '.join(directors)
+
+# Create new dataframe with cast names and director
+credits_processed = pd.DataFrame({
+    'id': credits['id'],
+    'cast_names': credits['cast'].apply(get_cast_names),
+    'director': credits['crew'].apply(get_director)
+})
+```
+**PENJELASAN**
+**Fungsi `get_cast_names(cast_str)`**
+Tujuan dari fungsi ini adalah untuk mengekstrak nama-nama pemeran dari data yang berisi informasi cast setiap film. Fungsi ini menyederhanakan informasi cast menjadi sebuah daftar nama pemeran yang dipisahkan oleh titik koma, memudahkan akses dan analisis data terkait aktor atau aktris yang terlibat dalam film.
+
+**Fungsi `get_director(crew_str)`**
+Tujuan dari fungsi ini adalah untuk mengekstrak nama sutradara dari data crew setiap film. Dengan fungsi ini, kita bisa memperoleh daftar nama sutradara yang terlibat dalam pembuatan film, dan menyajikannya dalam format yang lebih mudah diakses dan dianalisis.
+
+**Membuat DataFrame Baru `credits_processed`**
+Tujuan dari bagian ini adalah untuk membuat DataFrame baru yang menyertakan informasi penting dari kolom `cast` dan `crew`, yaitu nama-nama pemeran dan sutradara, dalam format yang lebih terstruktur. DataFrame baru ini mempermudah penggunaan informasi tersebut untuk analisis lebih lanjut atau untuk digunakan dalam sistem rekomendasi film.
+
+```python
+# Select important columns
+important_columns = [
+    'id', 'title', 'genres', 'overview',
+    'vote_average', 'vote_count',
+    'popularity', 'production_companies'
+]
+movies_metadata_selected = movies_metadata[important_columns].copy()
+# Drop rows where overview is NaN
+movies_metadata_selected = movies_metadata_selected.dropna(subset=['overview'])
+
+movies_metadata_selected.head()
+```
+**PENJELASAN**
+Kode di atas bertujuan untuk mengambil fitur-fitur penting yang dinilai relevan dengan kebutuhan content-based filtering.
+
+```python
+def get_genre_names(genres_str):
+    try:
+        if pd.isna(genres_str['genres']):
+            return genres_str['genres']  # Return NaN as is
+        if genres_str['genres'] == '[]':
+            return ''
+        genres = ast.literal_eval(genres_str['genres'])
+        return '; '.join([genre['name'] for genre in genres])
+    except:
+        return ''
+
+def get_production_companies(production_companies_str):
+    try:
+        if pd.isna(production_companies_str['production_companies']):
+            return production_companies_str['production_companies']  # Return NaN as is
+        if production_companies_str['production_companies'] == '[]':
+            return ''
+        companies = ast.literal_eval(production_companies_str['production_companies'])
+        return '; '.join([company['name'] for company in companies])
+    except:
+        return ''
+
+movies_metadata_selected['genres'] = movies_metadata_selected.apply(get_genre_names, axis=1)
+movies_metadata_selected['production_companies'] = movies_metadata_selected.apply(get_production_companies, axis=1)
+```
+
+**PENJELASAN**
+
+**Fungsi `get_genre_names`**
+Tujuan dari fungsi ini adalah untuk mengekstrak dan menyajikan nama-nama genre film dalam format yang lebih sederhana dan mudah dibaca. Dengan mengubah data genre yang awalnya kompleks menjadi daftar nama genre yang dipisahkan titik koma, informasi genre setiap film menjadi lebih mudah diolah dan dianalisis.
+
+**Fungsi `get_production_companies`**
+Fungsi ini bertujuan untuk mengambil dan menyusun nama-nama perusahaan produksi yang terlibat dalam pembuatan film. Data yang semula tersimpan dalam bentuk tidak langsung dibaca, diubah menjadi daftar nama perusahaan yang tersusun rapi, sehingga mempermudah pemahaman dan penggunaan informasi tersebut dalam analisis film.
+
+**Pengolahan Kolom pada `movies_metadata_selected`**
+Bagian ini bertujuan untuk memperbarui data film dengan mengganti format genre dan perusahaan produksi menjadi lebih ringkas dan terstruktur. Hasilnya, informasi penting pada dataset menjadi lebih siap untuk digunakan dalam analisis data maupun sistem rekomendasi film.
+
+## FILL NAN GENRE VALUES DENGAN TF-IDF
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import MultiLabelBinarizer
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+import string
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.multiclass import OneVsRestClassifier
+
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('punkt_tab')
+
+# Pisahkan data dengan genre yang ada dan yang kosong
+df_with_genres = movies_metadata_selected[movies_metadata_selected['genres'].apply(len) > 0].copy()
+df_without_genres = movies_metadata_selected[movies_metadata_selected['genres'].apply(len) == 0].copy()
+
+def parse_genres(genres_str):
+    if pd.isna(genres_str) or genres_str == '':
+        return []
+    return [g.strip() for g in genres_str.split(';')]
+
+df_with_genres['genres'] = df_with_genres['genres'].apply(parse_genres)
+
+df_with_genres['genres_one'] = df_with_genres['genres'].apply(lambda x: x[0])
+
+# Filter out rows where 'genres' contains any of the specified production companies
+for company in ['Carousel Production', 'Aniplex', 'Odyssey Media']:
+    df_with_genres = df_with_genres[~df_with_genres['genres_one'].str.contains(company, na=False)]
+
+stop_words = set(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
+
+def preprocess_text(text):
+    text = text.lower()
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    tokens = word_tokenize(text)
+    tokens = [lemmatizer.lemmatize(t) for t in tokens if t not in stop_words]
+    return ' '.join(tokens)
+
+df_with_genres['processed_overview'] = df_with_genres['overview'].apply(preprocess_text)
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+# TF-IDF vectorization
+vectorizer = TfidfVectorizer(max_features=5000)
+X = vectorizer.fit_transform(df_with_genres['processed_overview'])
+
+# Label encoding
+le = LabelEncoder()
+y = le.fit_transform(df_with_genres['genres_one'])
+
+# Train-test split (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = MultinomialNB()
+model.fit(X_train, y_train)
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
+
+# Predict on test set
+y_pred = model.predict(X_test)
+
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy:.4f}")
+
+# Precision, Recall, F1-score (macro = rata-rata antar kelas)
+precision = precision_score(y_test, y_pred, average='macro')
+recall = recall_score(y_test, y_pred, average='macro')
+f1 = f1_score(y_test, y_pred, average='macro')
+
+print(f"Precision (macro): {precision:.4f}")
+print(f"Recall (macro): {recall:.4f}")
+print(f"F1 Score (macro): {f1:.4f}")
+
+# Classification report (lebih detail per kelas)
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=le.classes_))
+```
+
+![image](https://github.com/user-attachments/assets/8e9464fe-43d8-4173-9532-ffd33eeeca97)
+
+Hasil di atas menunjukkan bahwa model gagal memprediksi genre minoritas karena kualitas data yang inbalance. Hal tersebut dapat dilihat dari nilai recall dan F1-Scorenya
+
+## FILL NAN GENRE VALUES DENGAN TRANSFORMER
+```python
+import torch
+import numpy as np
+import pandas as pd
+from torch.utils.data import Dataset, DataLoader
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+from torch.optim import AdamW
+from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+
+# Daftar 'genre' yang sebenarnya adalah nama production company dan harus dihapus
+fake_genres = [
+    "Carousel Productions", "Vision View Entertainment", "Telescene Film Group Productions",
+    "Aniplex", "GoHands", "BROSTA TV", "Mardock Scramble Production Committee",
+    "Sentai Filmworks", "Odyssey Media", "Pulser Productions", "Rogue State", "The Cartel"
+]
+
+# Hapus baris jika ada salah satu item di fake_genres muncul di kolom genres
+df_cleaned = df_with_genres[~df_with_genres['genres'].apply(lambda x: any(g in fake_genres for g in x))].reset_index(drop=True)
+
+# Split string genres jadi list
+movies_metadata_selected['genres_split'] = df_cleaned['genres']
+
+# Explode agar setiap genre jadi baris sendiri
+movies_metadata_selected_exploded = movies_metadata_selected.explode('genres_split').reset_index(drop=True)
+
+# Daftar genre unik (sesuaikan dengan dataset Anda)
+GENRES = movies_metadata_selected_exploded['genres_split'].dropna().unique()
+NUM_LABELS = len(GENRES)
+
+# Fungsi untuk mengubah list genre menjadi vektor biner
+def genres_to_vector(genres_list, all_genres):
+    vector = [1 if genre in genres_list else 0 for genre in all_genres]
+    return vector
+
+# Kelas TextDataset untuk Multilabel
+class TextDataset(Dataset):
+    def __init__(self, texts, labels, tokenizer, max_len=128):
+        self.texts = texts
+        self.labels = labels
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, idx):
+        text = str(self.texts[idx])
+        label = self.labels[idx]
+
+        encoding = self.tokenizer.encode_plus(
+            text,
+            add_special_tokens=True,
+            max_length=self.max_len,
+            return_token_type_ids=False,
+            padding='max_length',
+            truncation=True,
+            return_attention_mask=True,
+            return_tensors='pt'
+        )
+
+        return {
+            'input_ids': encoding['input_ids'].flatten(),
+            'attention_mask': encoding['attention_mask'].flatten(),
+            'labels': torch.tensor(label, dtype=torch.float)
+        }
+
+# Fungsi Pelatihan
+def train_model(model, data_loader, optimizer, device, pos_weight):
+    model.train()
+    total_loss = 0
+    for batch in data_loader:
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
+        labels = batch['labels'].to(device)
+
+        outputs = model(input_ids, attention_mask=attention_mask)
+        logits = outputs.logits
+
+        loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        loss = loss_fn(logits, labels)
+        total_loss += loss.item()
+
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
+    return total_loss / len(data_loader)
+
+# Fungsi Evaluasi
+def eval_model(model, data_loader, device, thresholds=None):
+    if thresholds is None:
+        thresholds = [0.5] * NUM_LABELS
+    model.eval()
+    total_loss = 0
+    predictions = []
+    true_labels = []
+
+    with torch.no_grad():
+        for batch in data_loader:
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
+
+            outputs = model(input_ids, attention_mask=attention_mask)
+            logits = outputs.logits
+
+            loss_fn = torch.nn.BCEWithLogitsLoss()
+            loss = loss_fn(logits, labels)
+            total_loss += loss.item()
+
+            probs = torch.sigmoid(logits)
+            preds = torch.zeros_like(probs)
+            for i, threshold in enumerate(thresholds):
+                preds[:, i] = (probs[:, i] > threshold).float()
+
+            predictions.append(preds.cpu())
+            true_labels.append(labels.cpu())
+
+    predictions = torch.cat(predictions)
+    true_labels = torch.cat(true_labels)
+    macro_f1 = f1_score(true_labels.numpy(), predictions.numpy(), average='macro')
+    micro_f1 = f1_score(true_labels.numpy(), predictions.numpy(), average='micro')
+    accuracy_per_label = (predictions == true_labels).float().mean(dim=0)
+
+    return total_loss / len(data_loader), macro_f1, micro_f1, accuracy_per_label
+
+# Parameter
+MAX_LEN = 256  # Sinopsis biasanya lebih panjang, jadi gunakan 256
+BATCH_SIZE = 16
+EPOCHS = 10
+LEARNING_RATE = 2e-5
+
+df_with_genres['labels'] = df_with_genres['genres'].apply(lambda x: genres_to_vector(x, GENRES))
+texts = df_with_genres['overview'].tolist()
+labels = df_with_genres['labels'].tolist()
+
+# Split data
+train_texts, val_texts, train_labels, val_labels = train_test_split(
+    texts, labels, test_size=0.2, random_state=42
+)
+
+# Inisialisasi tokenizer dan model
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+model = DistilBertForSequenceClassification.from_pretrained(
+    'distilbert-base-uncased',
+    num_labels=NUM_LABELS,
+    problem_type="multi_label_classification"
+)
+
+# Pindah model ke device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = model.to(device)
+
+# Inisialisasi dataset dan dataloader
+train_dataset = TextDataset(train_texts, train_labels, tokenizer, MAX_LEN)
+val_dataset = TextDataset(val_texts, val_labels, tokenizer, MAX_LEN)
+train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE)
+
+# Hitung pos_weight untuk ketidakseimbangan
+labels_np = np.array(labels)
+pos_freq = np.mean(labels_np, axis=0)
+neg_freq = 1 - pos_freq
+pos_weight = torch.tensor(neg_freq / (pos_freq + 1e-10)).to(device)
+
+# Optimizer
+optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
+
+# Loop pelatihan
+for epoch in range(EPOCHS):
+    print(f'Epoch {epoch + 1}/{EPOCHS}')
+    train_loss = train_model(model, train_loader, optimizer, device, pos_weight)
+    val_loss, macro_f1, micro_f1, acc_per_label = eval_model(model, val_loader, device)
+    print(f'Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
+    print(f'Macro F1: {macro_f1:.4f}, Micro F1: {micro_f1:.4f}')
+    print(f'Accuracy per genre: {dict(zip(GENRES, acc_per_label.numpy()))}')
+
+# Simpan model
+model.save_pretrained('fine_tuned_distilbert_genre')
+tokenizer.save_pretrained('fine_tuned_distilbert_genre')
+```
+
+![image](https://github.com/user-attachments/assets/d4997630-0e75-4b5f-9a76-aa99062a4169)
+
+Hasil di atas menunjukkan peningkatan macro F1 score yang sangat signifikan bahkan pada multilable class. Pada finetunning menghasilkan 59% sedangkan penggunaan TF-IDF dan MultinomialNB menghasilkan 14%.
+
+**Predict Nan Value use Trained Model**
+```python
+# Function to tokenize text data
+def tokenize_data(texts, tokenizer, max_length=128):
+    encodings = tokenizer(
+        texts.tolist(),
+        truncation=True,
+        padding=True,
+        max_length=max_length,
+        return_tensors='pt'
+    )
+    return encodings
+
+# Tokenize the text data from df_without_genres
+texts = df_without_genres['overview']  # Replace 'text' with your actual column name
+encodings = tokenize_data(texts, tokenizer)
+
+# Prepare inputs for the model
+input_ids = encodings['input_ids'].to(device)
+attention_mask = encodings['attention_mask'].to(device)
+
+# Load the fine-tuned model and tokenizer
+model_path = '/content/drive/MyDrive/fine_tuned_distilbert_genre'
+tokenizer = DistilBertTokenizer.from_pretrained(model_path)
+model = DistilBertForSequenceClassification.from_pretrained(model_path)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
+model.eval()
+
+# Function to tokenize text data
+def tokenize_data(texts, tokenizer, max_length=128):
+    encodings = tokenizer(
+        texts.tolist(),
+        truncation=True,
+        padding=True,
+        max_length=max_length,
+        return_tensors='pt'
+    )
+    return encodings
+
+# Tokenize the text data from df_without_genres
+texts = df_without_genres['overview']  # Replace 'text' with your actual column name
+encodings = tokenize_data(texts, tokenizer)
+
+# Prepare inputs for the model
+input_ids = encodings['input_ids'].to(device)
+attention_mask = encodings['attention_mask'].to(device)
+
+from torch.nn.functional import sigmoid
+
+# Make predictions in batches (optional, for large datasets)
+batch_size = 16
+predicted_genres = []
+with torch.no_grad():
+    for i in range(0, len(input_ids), batch_size):
+        batch_input_ids = input_ids[i:i + batch_size]
+        batch_attention_mask = attention_mask[i:i + batch_size]
+        outputs = model(batch_input_ids, attention_mask=batch_attention_mask)
+        logits = outputs.logits
+        probs = sigmoid(logits)  # Sigmoid for multi-label probabilities
+        batch_preds = (probs > 0.5).int().cpu().numpy()  # Threshold at 0.5
+        for pred in batch_preds:
+            genres = [GENRES[j] for j, val in enumerate(pred) if val == 1]
+            predicted_genres.append(genres if genres else ['None'])
+
+# Add predictions to the DataFrame
+df_without_genres['predicted_genres'] = predicted_genres
+```
+
+**Hasil Prediksi**
+![image](https://github.com/user-attachments/assets/6eb15734-edda-4f30-8531-45761b41cac1)
+
+## Feature Engineering
+```python
+m = movies_metadata_selected['vote_count'].quantile(0.9)  # Minimum votes (top 10%)
+C = movies_metadata_selected['vote_average'].mean()       # Mean vote across all movies
+movies_metadata_selected['weighted_rating'] = movies_metadata_selected.apply(
+    lambda x: (x['vote_count']/(x['vote_count']+m) * x['vote_average']) + (m/(m+x['vote_count']) * C),
+    axis=1
+)
+
+movies_metadata_selected['vote_count_normalized'] = (movies_metadata_selected['vote_count'] - movies_metadata_selected['vote_count'].min()) / (movies_metadata_selected['vote_count'].max() - movies_metadata_selected['vote_count'].min())
+```
+
+**PENJELASAN**
+Tahapan ini adalah berusaha memberikan peringkat lebih adil dengan mempertimbangkan baik kuantitas (jumlah vote) maupun kualitas (rating) sehingga menghindari bias terhadap film dengan sedikit vote namun rating tinggi, agar tidak mendominasi daftar film terbaik.
 
 
 
