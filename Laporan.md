@@ -142,11 +142,15 @@ Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 **Data Explanatory**
 **1. Genre Distribution**
 Gambar di bawah adalah hasil explanatory genre pertama dalam kumpulan genre untuk tujuan memprediksi 1 genre untuk 1 film
+
 ![image](https://github.com/user-attachments/assets/a6a60cd5-f6a5-4fbd-afd4-8febd106d0f2)
+
 - Hasil grafik di atas menunjukkan bahwa dataset mengalami unbalance yang tinggi sehingga akan sangat berpotensi mendapatkan hasil metriks evaluasi yang jelek untuk proses pelatihan model klasifikasi genre untuk imputasi nan value.
 
 Gambar di bawah merupakan total distribusi genre yang ada dalam dataset
+
 ![image](https://github.com/user-attachments/assets/f6321272-ff67-4eae-b5c8-ec598f3dba92)
+
 Hasil di atas menunjukkan bahwa jika ditotal dari setiap genre yang ada di dalam movie maka label tetap tidak seimbang sehingga akan mempengaruhi kualitas prediksi.
 
 # Data Preparation
@@ -171,7 +175,9 @@ credits_processed = pd.DataFrame({
     'director': credits['crew'].apply(get_director)
 })
 ```
-**PENJELASAN**
+
+**PENJELASAN:**
+
 **Fungsi `get_cast_names(cast_str)`**
 Tujuan dari fungsi ini adalah untuk mengekstrak nama-nama pemeran dari data yang berisi informasi cast setiap film. Fungsi ini menyederhanakan informasi cast menjadi sebuah daftar nama pemeran yang dipisahkan oleh titik koma, memudahkan akses dan analisis data terkait aktor atau aktris yang terlibat dalam film.
 
@@ -194,7 +200,8 @@ movies_metadata_selected = movies_metadata_selected.dropna(subset=['overview'])
 
 movies_metadata_selected.head()
 ```
-**PENJELASAN**
+**PENJELASAN:**
+
 Kode di atas bertujuan untuk mengambil fitur-fitur penting yang dinilai relevan dengan kebutuhan content-based filtering.
 
 ```python
@@ -224,7 +231,7 @@ movies_metadata_selected['genres'] = movies_metadata_selected.apply(get_genre_na
 movies_metadata_selected['production_companies'] = movies_metadata_selected.apply(get_production_companies, axis=1)
 ```
 
-**PENJELASAN**
+**PENJELASAN:**
 
 **Fungsi `get_genre_names`**
 Tujuan dari fungsi ini adalah untuk mengekstrak dan menyajikan nama-nama genre film dalam format yang lebih sederhana dan mudah dibaca. Dengan mengubah data genre yang awalnya kompleks menjadi daftar nama genre yang dipisahkan titik koma, informasi genre setiap film menjadi lebih mudah diolah dan dianalisis.
@@ -235,8 +242,23 @@ Fungsi ini bertujuan untuk mengambil dan menyusun nama-nama perusahaan produksi 
 **Pengolahan Kolom pada `movies_metadata_selected`**
 Bagian ini bertujuan untuk memperbarui data film dengan mengganti format genre dan perusahaan produksi menjadi lebih ringkas dan terstruktur. Hasilnya, informasi penting pada dataset menjadi lebih siap untuk digunakan dalam analisis data maupun sistem rekomendasi film.
 
+```python
+import ast
+
+def extract_keywords(keyword_list):
+    return ' '.join([kw['name'].replace(" ", "") for kw in keyword_list])
+
+# Kalau datanya string JSON:
+keywords['keywords'] = keywords['keywords'].apply(lambda x: extract_keywords(ast.literal_eval(x)))
+```
+
+**PENJELASAN:**
+
+Kode di atas bertujuan untuk menggabungkan dataset keyword yang awalnya terpisah menjadi sebuah string panjang agar dapat disatukan menjadi prepresentasi dari fitur sebuah film.
+
 ## FILL NAN GENRE VALUES DENGAN TF-IDF
 
+1. Mempersiapkan library dan data yang akan dilatih serta diprediksi
 ```python
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -250,6 +272,13 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.multiclass import OneVsRestClassifier
 
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
+
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -259,6 +288,10 @@ nltk.download('punkt_tab')
 df_with_genres = movies_metadata_selected[movies_metadata_selected['genres'].apply(len) > 0].copy()
 df_without_genres = movies_metadata_selected[movies_metadata_selected['genres'].apply(len) == 0].copy()
 
+```
+
+2. Karena percobaan memprediksi banyak genre sekaligus mendapatkan hasil yang buruk maka dilakukan percobaan memprediksi satu genre saya. Oleh karena itu, di bawah terdapat `genre_one`.
+```python
 def parse_genres(genres_str):
     if pd.isna(genres_str) or genres_str == '':
         return []
@@ -271,10 +304,12 @@ df_with_genres['genres_one'] = df_with_genres['genres'].apply(lambda x: x[0])
 # Filter out rows where 'genres' contains any of the specified production companies
 for company in ['Carousel Production', 'Aniplex', 'Odyssey Media']:
     df_with_genres = df_with_genres[~df_with_genres['genres_one'].str.contains(company, na=False)]
+```
 
+3. Melakukan preprocessing text yang dibutuhkan untuk kebutuhan proses pelatihan dan pembobotan pada proses embedding di tahap selanjutnya.
+```python
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
-
 def preprocess_text(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
@@ -283,12 +318,10 @@ def preprocess_text(text):
     return ' '.join(tokens)
 
 df_with_genres['processed_overview'] = df_with_genres['overview'].apply(preprocess_text)
+```
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-
+4. Melakukan embedding menggunakan metode TF-IDF dan melakukan splitting dataset menjadi test dan train.
+```python
 # TF-IDF vectorization
 vectorizer = TfidfVectorizer(max_features=5000)
 X = vectorizer.fit_transform(df_with_genres['processed_overview'])
@@ -299,13 +332,17 @@ y = le.fit_transform(df_with_genres['genres_one'])
 
 # Train-test split (80% train, 20% test)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
 
+5. Melakukan pelatihan model menggunakan multinomial karena ingin menghasilkan beberapa prediksi secara langsung.
+```python
 # Train model
 model = MultinomialNB()
 model.fit(X_train, y_train)
+```
 
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
-
+6. Melakukan evaluasi model menggunakan sejumlah matrix
+```
 # Predict on test set
 y_pred = model.predict(X_test)
 
@@ -329,7 +366,8 @@ print(classification_report(y_test, y_pred, target_names=le.classes_))
 
 ![image](https://github.com/user-attachments/assets/8e9464fe-43d8-4173-9532-ffd33eeeca97)
 
-Hasil di atas menunjukkan bahwa model gagal memprediksi genre minoritas karena kualitas data yang inbalance. Hal tersebut dapat dilihat dari nilai recall dan F1-Scorenya
+Hasil di atas menunjukkan bahwa model gagal memprediksi genre minoritas karena kualitas data yang inbalance. Hal tersebut dapat dilihat dari nilai recall dan F1-Scorenya.
+Oleh karena itu dilakukan metode pendekatan kedua menggunakan cara yang lebih mutakhir.
 
 ## FILL NAN GENRE VALUES DENGAN TRANSFORMER
 ```python
@@ -589,6 +627,7 @@ df_without_genres['predicted_genres'] = predicted_genres
 ```
 
 **Hasil Prediksi**
+
 ![image](https://github.com/user-attachments/assets/6eb15734-edda-4f30-8531-45761b41cac1)
 
 ## Feature Engineering
@@ -603,8 +642,216 @@ movies_metadata_selected['weighted_rating'] = movies_metadata_selected.apply(
 movies_metadata_selected['vote_count_normalized'] = (movies_metadata_selected['vote_count'] - movies_metadata_selected['vote_count'].min()) / (movies_metadata_selected['vote_count'].max() - movies_metadata_selected['vote_count'].min())
 ```
 
-**PENJELASAN**
-Tahapan ini adalah berusaha memberikan peringkat lebih adil dengan mempertimbangkan baik kuantitas (jumlah vote) maupun kualitas (rating) sehingga menghindari bias terhadap film dengan sedikit vote namun rating tinggi, agar tidak mendominasi daftar film terbaik.
+**PENJELASAN:**
+
+Tahapan ini berusaha memberikan peringkat lebih adil dengan mempertimbangkan baik kuantitas (jumlah vote) maupun kualitas (rating) sehingga menghindari bias terhadap film dengan sedikit vote namun rating tinggi, agar tidak mendominasi daftar film terbaik.
+
+**Combine Dataset**
+```python
+combined_df = pd.merge(movies_metadata_selected, credits_processed, on='id', how='left')
+combined_df = pd.merge(combined_df, keywords, on='id', how='left')
+
+# Menggabungkan genre yang berbentuk list menjadi sebuah satu string dan menghapus movie yang tidak memiliki genre
+combined_df['genres'] = combined_df['genres'].apply(lambda x: ' '.join(x))
+combined_df = combined_df[combined_df['genres'].notna() & ~combined_df['genres'].isin(['', ' '])]
+
+# Menggabungkan semua content yang dimiliki oleh feature untuk menjadi satu feature yang dapat mewakili semua feature secara bersamaan
+combined_df['combined_features'] = (
+    combined_df['overview'].fillna('') + ' ' +
+    combined_df['keywords'] + ' ' +
+    combined_df['genres'] + ' ' +
+    combined_df['cast_names'].fillna('') + ' ' +
+    combined_df['director'].fillna('')
+)
+
+content_based_recommendations = combined_df[['id', 'title', 'genres', 'combined_features','vote_count_normalized','popularity','weighted_rating']].copy()
+
+# Menghapus data yang masih mengandung nan
+content_based_recommendations = content_based_recommendations.dropna()
+```
+
+**Embedding Combined Feature**
+
+Fitur yang telah dikombinasikan sebelumnya diembedding menggunakan 2 pendekatan yaitu transformer dan tf-idf yang akan disesuaikan bobot impactnya.
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+
+# Reset index to ensure proper alignment
+content_based_recommendations = content_based_recommendations.reset_index(drop=True)
+
+# TF-IDF for titles
+tfidf = TfidfVectorizer(stop_words='english')
+tfidf_matrix = tfidf.fit_transform(content_based_recommendations['title'])
+
+# Load model ke device
+model_path = '/content/drive/MyDrive/fine_tuned_distilbert_genre'
+tokenizer = DistilBertTokenizer.from_pretrained(model_path)
+model = SentenceTransformer('all-MiniLM-L6-v2', device=device)
+bert_matrix = model.encode(content_based_recommendations['combined_features'].values, show_progress_bar=True)
+
+# Convert bert_matrix to scipy sparse matrix for consistency
+from scipy.sparse import csr_matrix
+
+# Encode data (otomatis akan pakai GPU kalau device='cuda')
+bert_matrix = model.encode(
+    content_based_recommendations['combined_features'].values,
+    show_progress_bar=True,
+    device=device  # pastikan ini ditambahkan
+)
+```
+
+# **MODELLING**
+
+Fungsi recommend bertujuan untuk menghasilkan rekomendasi film berdasarkan kemiripan konten dengan film tertentu yang dijadikan acuan (berdasarkan judul). Untuk itu, fungsi ini menggabungkan dua pendekatan perhitungan kemiripan, yaitu menggunakan model berbasis TF-IDF dan model berbasis BERT, dengan pembobotan yang dapat disesuaikan melalui parameter alpha dan beta. Apabila judul film tidak ditemukan dalam data TF-IDF, maka sistem tetap memberikan rekomendasi dengan hanya mengandalkan representasi semantik dari BERT. Setelah skor kemiripan dihitung, fungsi ini menambahkan komponen evaluasi tambahan berupa popularitas dan rating film, yang telah dinormalisasi, guna memastikan film yang direkomendasikan tidak hanya relevan dari sisi konten tetapi juga memiliki kualitas dan popularitas tinggi. Akhirnya, fungsi ini mengurutkan hasil berdasarkan skor akhir dan mengembalikan sejumlah film teratas yang paling sesuai dengan preferensi yang dimaksud. Dengan pendekatan ini, sistem dapat memberikan hasil rekomendasi yang lebih akurat, personal, dan berkualitas tinggi.
+
+```python
+# Fungsi cari index dari judul input
+def get_index_from_title(title):
+    return content_based_recommendations[content_based_recommendations['title'].str.lower() == title.lower()].index[0]
+
+# Fungsi similarity
+def get_similarity_scores(index):
+    tfidf_scores = cosine_similarity(tfidf_matrix[index], tfidf_matrix).flatten()
+    bert_scores = cosine_similarity([bert_matrix[index]], bert_matrix).flatten()
+    return tfidf_scores, bert_scores
+
+def recommend(title, alpha=0.4, beta=0.6, top_n=5):
+    try:
+        index = get_index_from_title(title)
+        tfidf_scores, bert_scores = get_similarity_scores(index)
+
+        # Jika title ditemukan, gabungkan TF-IDF dan BERT
+        content_score = alpha * tfidf_scores + beta * bert_scores
+
+    except IndexError:
+        # Kalau title tidak ditemukan, gunakan hanya BERT
+        print(f"⚠️ Title '{title}' not found. Recommending based on content only.")
+        # Kosongkan tfidf_scores agar alpha tidak digunakan
+        tfidf_scores = np.zeros(len(content_based_recommendations))
+        bert_scores = cosine_similarity([model.encode(title)], bert_matrix).flatten()
+        content_score = bert_scores
+
+    # Pastikan kolom numerik sudah bersih
+    content_based_recommendations['popularity'] = pd.to_numeric(content_based_recommendations['popularity'], errors='coerce').fillna(0)
+    normalized_rating = content_based_recommendations['weighted_rating'] / content_based_recommendations['weighted_rating'].max()
+    normalized_popularity = content_based_recommendations['popularity'] / content_based_recommendations['popularity'].max()
+
+    # Skor akhir
+    final_score = content_score + 0.2 * normalized_rating + 0.2 * normalized_popularity
+
+    # Urutkan dan ambil top-N
+    top_indices = final_score.argsort()[-top_n-1:-1][::-1]
+
+
+    return content_based_recommendations.iloc[top_indices][['title', 'genres','weighted_rating', 'popularity']]
+```
+
+# **EVALUATION**
+
+Kode tersebut bertujuan untuk menganalisis hasil rekomendasi film berdasarkan genre yang muncul dari setiap judul film yang diberikan. Untuk setiap judul dalam daftar, sistem menghasilkan rekomendasi film dan mengambil informasi genre dari hasil tersebut. Genre yang awalnya berupa string kemudian diolah menjadi format list agar dapat dianalisis lebih lanjut. Dari kumpulan genre tersebut, sistem mengidentifikasi semua genre unik yang muncul, sehingga bisa diketahui keragaman genre dalam rekomendasi. Selanjutnya, sistem menghitung seberapa sering masing-masing genre muncul di antara film-film yang direkomendasikan, guna mengetahui genre mana yang paling dominan. Akhirnya, dari frekuensi kemunculan genre tersebut, sistem mencatat skor tertinggi sebagai representasi tingkat relevansi genre paling dominan dalam setiap hasil rekomendasi. Proses ini dapat membantu dalam evaluasi performa sistem rekomendasi serta memahami preferensi genre yang ditangkap oleh model.
+
+Pengujian dilakukan menggunakan keywords berikut :
+```python
+title_keywords = [
+    # Action/Adventure
+    "mission", "quest", "journey", "escape", "chase", "battle", "war", "hero",
+    "legend", "adventure", "survivor", "hunter", "rebel", "outlaw", "guardian",
+
+    # Sci-Fi/Fantasy
+    "star", "galaxy", "space", "time", "future", "alien", "robot", "machine",
+    "dimension", "portal", "magic", "wizard", "dragon", "kingdom", "curse",
+
+    # Drama/Romance
+    "love", "heart", "dream", "life", "story", "soul", "forever", "kiss",
+    "promise", "fate", "destiny", "summer", "autumn", "winter", "spring",
+
+    # Comedy
+    "funny", "crazy", "wild", "party", "road", "trip", "big", "bad",
+    "super", "great", "misadventure", "buddy", "wedding", "night",
+
+    # Horror/Thriller
+    "dark", "night", "shadow", "fear", "ghost", "haunted", "evil", "dead",
+    "scream", "blood", "curse", "mystery", "secret", "killer", "trap",
+
+    # Crime/Mystery
+    "murder", "crime", "detective", "case", "suspect", "thief", "gangster",
+    "heist", "justice", "law", "order", "conspiracy", "truth", "lie",
+
+    # Historical/Biography
+    "king", "queen", "emperor", "warrior", "glory", "honor", "legacy",
+    "rise", "fall", "empire", "revolution", "freedom", "battle", "hero",
+
+    # Family/Animation
+    "kid", "family", "friend", "dog", "cat", "bear", "lion", "prince",
+    "princess", "adventure", "world", "magic", "toy", "dream",
+
+    # Western
+    "cowboy", "sheriff", "bandit", "desert", "gold", "frontier", "town",
+    "duel", "rider", "trail", "sunset", "valley", "river",
+
+    # Musical
+    "song", "dance", "music", "band", "stage", "show", "star", "rhythm",
+    "melody", "dream", "shine", "harmony", "sound",
+
+    # General/Universal
+    "last", "first", "new", "old", "lost", "found", "hidden", "broken",
+    "forgotten", "end", "beginning", "home", "city", "island", "sky",
+    "sea", "road", "path", "way", "man", "woman", "boy", "girl"
+]
+```
+
+Lalu setiap keyword tersebut akan diuji menggunakan proses berikut:
+```python
+all_max_score = []
+
+for title  in title_keywords:
+  film_recomendation = recommend(title)
+
+  # Ambil kolom genres
+  retrieved_genres = film_recomendation['genres']
+
+  # Pisahkan string genre menjadi list, tangani non-string
+  all_genres = retrieved_genres.apply(lambda x: x.split(' ') if isinstance(x, str) else [])
+
+  # Buat set dari semua genre unik, hindari string kosong
+  all_unique_genres = set(genre for sublist in all_genres for genre in sublist if genre)
+
+  # Inisialisasi dictionary untuk menyimpan frekuensi genre
+  scores_dict = {genre: 0 for genre in all_unique_genres}
+
+  # Hitung frekuensi setiap genre dengan cara lebih efisien
+  for genres in all_genres:
+      for genre in genres:
+          if genre in scores_dict:
+              scores_dict[genre] += 1
+
+  # Ambil semua nilai frekuensi
+  all_score = list(scores_dict.values())
+
+  # Tentukan tingkatan relevansi berdasarkan frekuensi tertinggi
+  max_score = max(all_score) if all_score else 0
+
+  all_max_score.append(max_score)
+```
+
+Hasil akhir akan ditampilkan seperti berikut:
+```python
+total_score = 0
+
+for score in all_max_score:
+  total_score += score
+
+average_score = total_score / len(all_max_score)
+print(average_score)
+```
+
+Contoh hasil pengujian:
+
+![image](https://github.com/user-attachments/assets/99648f15-1dc4-443d-99c4-d725f74c39de)
+
 
 
 
