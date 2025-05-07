@@ -103,6 +103,7 @@ Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 | `keywords`     | object        | Kumpulan kata kunci deskriptif (tags) yang menggambarkan tema atau elemen utama film. |
 
 **DATA PREVIEW**
+
 ![image](https://github.com/user-attachments/assets/ade0a675-0338-4483-adf6-71efcf677284)
 
 
