@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/b052a858-3659-4087-b847-f9b41a570ae6)# **Laporan Proyek Machine Learning - Ivan Sholana**
+# **Laporan Proyek Machine Learning - Ivan Sholana**
 
 ## **Project Overview**
 
