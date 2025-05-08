@@ -109,8 +109,8 @@ Data Source: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset
 
 **Movie Metada Dataset**
 
-![image](https://github.com/user-attachments/assets/4feeaf41-ff85-42fb-a959-00de971b073c)
-![image](https://github.com/user-attachments/assets/4768f60f-99d6-42c3-bd9e-e463c8e227cb)
+![image](https://github.com/user-attachments/assets/dbd4ede6-1cf7-49c5-b22d-16da3cf340ed)
+![image](https://github.com/user-attachments/assets/f8cd3f18-460c-48d7-ab31-6266d6479707)
 
 | **Nama Fitur**          | **Tipe Data** | **Deskripsi Singkat**                                                              |
 | ----------------------- | ------------- | ---------------------------------------------------------------------------------- |
